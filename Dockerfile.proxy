@@ -1,0 +1,4 @@
+FROM python:3.11-slim
+RUN pip install mitmproxy==10.1.6 redis==5.0.6
+COPY app/proxy_addon.py /addon.py
+CMD ["mitmdump", "-s", "/addon.py", "--set", "listen_port=8080", "--set", "web_port=8081"]
