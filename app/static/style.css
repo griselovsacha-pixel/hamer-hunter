@@ -1,0 +1,17 @@
+body { background: #0a0f1a; color: #e0e6ed; font-family: 'Segoe UI', system-ui; margin: 2rem; }
+.container { max-width: 900px; margin: 0 auto; }
+h1 { color: #4f8cff; }
+.tabs { margin-bottom: 1rem; }
+.tab { padding: 0.5rem 1rem; background: #1a2332; border: none; color: #fff; cursor: pointer; margin-right: 0.5rem; border-radius: 4px; }
+.tab.active { background: #2d4b7c; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+input { padding: 0.5rem; width: 70%; margin-right: 1rem; background: #1a2332; border: 1px solid #2d3b52; color: #fff; border-radius: 4px; }
+button { padding: 0.5rem 1.5rem; background: #2d4b7c; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
+#progress { margin: 1rem 0; color: #8094b0; }
+.card { background: #15202b; border-left: 4px solid; padding: 1rem; margin: 0.8rem 0; border-radius: 6px; }
+.severity-critical { border-color: #e0245e; }
+.severity-high { border-color: #ff7a00; }
+.severity-medium { border-color: #f5c842; }
+.severity-low, .severity-info { border-color: #3bb34b; }
+.fix { background: #1e2d3d; padding: 0.5rem; margin-top: 0.5rem; border-radius: 4px; font-size: 0.9em; }
