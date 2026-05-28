@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamer Hunter - Ultimate Scanner</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Hamer Hunter</h1>
+        <p>Bug Bounty + Vulnerability Scanner + Proxy</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('scan')">Active Scan</button>
+            <button class="tab" onclick="switchTab('proxy')">Proxy Live</button>
+        </div>
+
+        <div id="scan-tab" class="tab-content active">
+            <input type="text" id="urlInput" placeholder="https://example.com">
+            <button id="scanBtn">Scan</button>
+            <div id="progress"></div>
+            <div id="scan-results"></div>
+        </div>
+
+        <div id="proxy-tab" class="tab-content">
+            <p>Connect your browser to proxy: <code id="proxyHost">hamer-hunter-proxy:8080</code></p>
+            <div id="proxy-results"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            if(tab === 'scan') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('scan-tab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('proxy-tab').classList.add('active');
+            }
+        }
+
+        document.getElementById('scanBtn').addEventListener('click', async () => {
+            const url = document.getElementById('urlInput').value;
+            if(!url) return alert('Enter URL');
+            document.getElementById('progress').textContent = 'Starting scan...';
+            const {task_id} = await (await fetch('/scan?url='+encodeURIComponent(url), {method:'POST'})).json();
+            const poll = async () => {
+                const resp = await fetch('/scan/'+task_id);
+                const data = await resp.json();
+                if(data.status === 'running') {
+                    document.getElementById('progress').textContent = 'Scanning...';
+                    setTimeout(poll, 2000);
+                } else if(data.status === 'completed') {
+                    document.getElementById('progress').textContent = 'Scan completed.';
+                    renderResults(data.results, 'scan-results');
+                } else {
+                    document.getElementById('progress').textContent = 'Error: '+ (data.error || data.status);
+                }
+            };
+            poll();
+        });
+
+        function renderResults(findings, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            findings.forEach(f => {
+                const card = document.createElement('div');
+                card.className = `card severity-${f.severity}`;
+                card.innerHTML = `<h3>${f.type}</h3>
+                <p><strong>Severity:</strong> ${f.severity}</p>
+                <p><strong>URL:</strong> ${f.url}</p>
+                <p>${f.description || ''}</p>
+                <div class="fix"><strong>🔒 Fix:</strong> ${f.fix || ''}</div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // WebSocket для прокси
+        const ws = new WebSocket('ws://' + location.host + '/ws/results');
+        ws.onmessage = (event) => {
+            const findings = JSON.parse(event.data);
+            renderResults(findings, 'proxy-results');
+        };
+    </script>
+</body>
+</html>
