@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: hamer-hunter-web
+    env: docker
+    dockerfilePath: ./Dockerfile.web
+    plan: free
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: hamer-hunter-redis
+          type: redis
+          property: connectionString
+
+  - type: worker
+    name: hamer-hunter-worker
+    env: docker
+    dockerfilePath: ./Dockerfile.worker
+    plan: starter
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: hamer-hunter-redis
+          type: redis
+          property: connectionString
+      - key: SHODAN_API_KEY
+        sync: false
+      - key: HUNTER_API_KEY
+        sync: false
+
+  - type: redis
+    name: hamer-hunter-redis
+    ipAllowList: []
+    plan: free
+
+  - type: web
+    name: hamer-hunter-proxy
+    env: docker
+    dockerfilePath: ./Dockerfile.proxy
+    plan: free
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: hamer-hunter-redis
+          type: redis
+          property: connectionString
