@@ -1,0 +1,23 @@
+FROM kalilinux/kali-rolling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip git curl wget unzip ca-certificates \
+    nmap dnsutils whois \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка Go-инструментов
+RUN wget -q "https://go.dev/dl/go1.21.5.linux-amd64.tar.gz" -O go.tar.gz && tar -C /usr/local -xzf go.tar.gz && rm go.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+RUN go install -v github.com/tomnomnom/assetfinder@latest
+RUN go install -v github.com/zricethezav/gitleaks/v8@latest
+RUN wget -q https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Linux.tar.gz -O zap.tar.gz && tar -xzf zap.tar.gz -C /opt/ && rm zap.tar.gz
+ENV PATH=$PATH:/opt/ZAP_2.14.0
+RUN pip3 install --no-cache-dir mitmproxy redis celery fastapi uvicorn jinja2 aiofiles requests python-whois shodan hunterio 2>/dev/null
+RUN gem install wpscan
+
+# Копируем код приложения
+WORKDIR /app
+COPY app/ ./app/
+CMD ["celery", "-A", "app.tasks", "worker", "--loglevel=info", "--concurrency=2"]
